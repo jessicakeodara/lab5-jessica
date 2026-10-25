@@ -21,17 +21,39 @@ from WikiDataReader import *
 class WikiWordLookup():
 
     def __init__(self, articles, word_vector_model):
+        '''
+        Create a WikiWordLookup object to search for most ranked words from provided articles
+        and training with a given word_vector_model to obtain its wiki_word_vectors.
+        '''
         self.articles = articles
         self.word_vector_model = word_vector_model
         self.wiki_word_vectors = None
 
     def train_vector_model(self):
+        '''
+        Train the instance's word_vector_model with the articles' abstracts
+        and update wiki_word_vectors
+        '''
         print("Training vector model. Please wait, this may take a while...")
         self.wiki_word_vectors = self.word_vector_model.train(self.articles.get_abstracts())
         self.wiki_word_vectors = normalize(self.wiki_word_vectors)
         print("Done!")
 
     def compute_rankings(self, input_word):
+        '''
+        For a given input_word, obtain the word vector from the word_vector_model and 
+        compute the similarity score rankings between this word vector and all other 
+        word vectors in wiki_word_vectors. 
+        
+        This method can only be called after train_vector_model() has been called.
+
+        Returns a tuple containing:
+            - similarity scores array
+            - rankings of the similarity scores from most similar to least similar 
+              (besides the similarity of the input_word)
+        
+        If there is no word_vector, then input_word is not in vocabulary, so return (None, None)
+        '''
         if self.wiki_word_vectors is None:
             raise RuntimeError("Please run train_vector_model first!")
 
@@ -49,6 +71,10 @@ class WikiWordLookup():
         return sims, np.argsort(sims)[::-1][1:]
 
     def run_search(self, input_word, n_results=10):
+        '''
+        For a given input_word, print out n_results (defaulted at 10) results of the most matched words
+        with its corresponding similarity ranking to the input-word.
+        '''
         input_word = input_word.lower()
         print(f"Top {n_results} most similar words to {input_word}:")
         sims, ranking = self.compute_rankings(input_word)

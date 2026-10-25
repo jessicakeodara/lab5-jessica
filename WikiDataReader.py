@@ -21,18 +21,39 @@ def get_files(dirname):
 class WikiArticles():
 
     def __init__(self, data_dir, max_articles=None):
+        '''
+        Create an object of WikiArticles for a given data directory and max articles 
+        (if there are any) to read each wiki file and obtain article names and abstracts.
+        '''
         self.data_dir = data_dir
         self.max_articles = max_articles
         self.article_names = None
 
     def _read_wiki_file(self, fp):
+        '''
+        For each line in the wiki file, yield the name and abstract
+        '''
         for line in fp:
-            line_as_json = None # TODO replace me: use the json library to parse the current line as a JSON object
-            name = None         # TODO replace me: in the JSON object you got above, look up the value of the "name" attribute
-            abstract = None     # TODO replace me: in the JSON object you got above, look up the value of the "abstract" attribute
-            yield name, abstract
+            line_as_json = json.loads(line)
+            
+            for attr, val, line_as_json.items():
+                if attr == "name":
+                    name = val
+                if attr == "abstract":
+                    abstract = val
+
+
+
+            #                                     # TODO replace me: use the json library to parse the current line as a JSON object
+            # name = line_as_json["name"]         # TODO replace me: in the JSON object you got above, look up the value of the "name" attribute
+            # abstract = line_as_json["abstract"]     # TODO replace me: in the JSON object you got above, look up the value of the "abstract" attribute
+            # yield name, abstract
 
     def get_abstracts(self):
+        '''
+        For each wiki file from the data directory, go through _read_wiki_file() to 
+        update article_names and yield the file's abstract
+        '''
         n_processed = 0
         for fname in get_files(self.data_dir):
             with open(fname) as fp:
@@ -49,6 +70,10 @@ class WikiArticles():
                     yield abstract
 
     def get_names(self):
+        '''
+        Return the article name for the data directory.
+        Note: This function can only be called after going through _read_wiki_file() for each file in data_dir.
+        '''
         if self.article_names is None:
             raise RuntimeError("get_names cannot be called until get_abstracts has been called!")
         return self.article_names
@@ -112,9 +137,7 @@ class WikiWordVectors(ABC):
         documents: an iterable over documents, where each document is represented as a string
 
         Returns:
-        A tuple containing:
-        - A vocabulary learned from the input documents
-        - A matrix where the ith row is the vector representation of the ith vocab word
+        A matrix where the ith row is the vector representation of the ith vocab word
         """
         raise NotImplementedError()
 

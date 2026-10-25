@@ -21,17 +21,36 @@ from WikiDataReader import *
 class WikiSearchEngine():
 
     def __init__(self, articles, doc_vector_model):
+        '''
+        Create a WikiSearchEngine object to search for most ranked documents from provided articles
+        and training with a given doc_vector_model to obtain its wiki_corpus_vectors.
+        '''
         self.articles = articles
         self.doc_vector_model = doc_vector_model
         self.wiki_corpus_vectors = None
 
     def train_vector_model(self):
+        '''
+        Train the instance's doc_vector_model with the articles' abstracts
+        and update wiki_corpus_vectors
+        '''
         print("Training vector model. Please wait, this may take a while...")
         self.wiki_corpus_vectors = self.doc_vector_model.train(self.articles.get_abstracts())
         self.wiki_corpus_vectors = normalize(self.wiki_corpus_vectors)
         print("Done!")
 
     def compute_rankings(self, query):
+        '''
+        For a given query, obtain the query vector from the doc_vector_model and 
+        compute the similarity score rankings between this doc vector and all other 
+        doc vectors in wiki_corpus_vectors. 
+        
+        This method can only be called after train_vector_model() has been called.
+
+        Returns a tuple containing:
+            - similarity scores array
+            - rankings of the similarity scores from most similar to least similar
+        '''
         if self.wiki_corpus_vectors is None:
             raise RuntimeError("Please run train_vector_model first!")
 
@@ -47,6 +66,10 @@ class WikiSearchEngine():
         return sims, np.argsort(sims)[::-1]
 
     def run_search(self, query, n_results=10):
+        '''
+        For a given query, print out n_results (defaulted at 10) results of the most matched articles
+        with its corresponding similarity ranking to the query.
+        '''
         print(f"Top {n_results} search results for query {query}:")
         sims, ranking = self.compute_rankings(query)
         for rank, i in enumerate(ranking[:n_results]):
