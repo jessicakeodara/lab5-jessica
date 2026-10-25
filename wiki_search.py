@@ -1,5 +1,6 @@
 import numpy as np
 import argparse
+from typing import override
 from sklearn.preprocessing import normalize
 
 from WikiDataReader import *
@@ -9,7 +10,22 @@ from WikiDataReader import *
 # Define your new subclasses below!
 #####################################################################
 
+class CountDocumentVectors(WikiDocumentVectors):
+    
+    def __init__(self, max_features=10000, max_df=0.70):
+        '''
+        Create an object of CountDocumentVectors to set TfidfVectorizer to 
+        a given max_features and max_df
+        '''
+        self.vectorizer = TfidfVectorizer(max_features, max_df)
 
+    @override
+    def train(self, documents):
+        return self.vectorizer.fit_transform(documents)
+    
+    @override
+    def get_document_vector(self, new_doc):
+        return self.vectorizer.transform(new_doc).flatten()
 
 
 

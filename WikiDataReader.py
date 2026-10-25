@@ -18,6 +18,15 @@ def get_files(dirname):
 # WikiArticles
 #####################################################################
 
+def main():
+    articles = WikiArticles('/courses/cs159/data/wikipedia/enwiki_sampled')
+    abstracts = list(articles.get_abstracts())
+    # print(abstracts)
+
+    names = articles.get_names()
+    # print(names)
+    
+
 class WikiArticles():
 
     def __init__(self, data_dir, max_articles=None):
@@ -34,20 +43,12 @@ class WikiArticles():
         For each line in the wiki file, yield the name and abstract
         '''
         for line in fp:
-            line_as_json = json.loads(line)
+            line_as_json = json.loads(str(line))
+            name = line_as_json['name']
+            abstract = line_as_json['abstract']
+
+            yield name, abstract
             
-            for attr, val, line_as_json.items():
-                if attr == "name":
-                    name = val
-                if attr == "abstract":
-                    abstract = val
-
-
-
-            #                                     # TODO replace me: use the json library to parse the current line as a JSON object
-            # name = line_as_json["name"]         # TODO replace me: in the JSON object you got above, look up the value of the "name" attribute
-            # abstract = line_as_json["abstract"]     # TODO replace me: in the JSON object you got above, look up the value of the "abstract" attribute
-            # yield name, abstract
 
     def get_abstracts(self):
         '''
