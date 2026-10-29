@@ -2,6 +2,9 @@ import numpy as np
 import argparse
 from typing import override
 from sklearn.preprocessing import normalize
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse.linalg import svds
+
 
 from WikiDataReader import *
 
@@ -12,12 +15,11 @@ from WikiDataReader import *
 
 class CountDocumentVectors(WikiDocumentVectors):
     
-    def __init__(self, max_features=10000, max_df=0.70):
+    def __init__(self):
         '''
-        Create an object of CountDocumentVectors to set TfidfVectorizer to 
-        a given max_features and max_df
+        Create an object of CountDocumentVectors to create TfidfVectorizer with max_features and max_df
         '''
-        self.vectorizer = TfidfVectorizer(max_features, max_df)
+        self.vectorizer = TfidfVectorizer(max_features=10000, max_df=0.70)
 
     @override
     def train(self, documents):
@@ -25,9 +27,31 @@ class CountDocumentVectors(WikiDocumentVectors):
     
     @override
     def get_document_vector(self, new_doc):
-        return self.vectorizer.transform(new_doc).flatten()
+        return self.vectorizer.transform([new_doc]).toarray()
 
 
+class SVDDocumentVectors(WikiDocumentVectors):
+
+    def __init__(self):
+        '''
+        Create an object of SVDDocumentVectors containing:
+            TfidfVectorizer and word_vectors (vh matrix, after running svds to the doc-term matrix)
+        '''
+        self.vectorizer = TfidfVectorizer(max_features=10000, max_df=0.70)
+        self.word_vectors = None
+
+    @override
+    def train(self, documents):
+        doc_term_matrix = self.vectorizer.fit_transform(documents)
+        u, s, vh = svds(A=doc_term_matrix, k=100)
+        self.word_vectors = vh
+        return u
+    
+    @override
+    def get_document_vector(self, new_doc):
+        doc_vector = self.vectorizer.transform([new_doc])
+        return doc_vector @ self.word_vectors.transpose()
+        
 
 
 #####################################################################
@@ -72,13 +96,9 @@ class WikiSearchEngine():
 
         query_vector = normalize(self.doc_vector_model.get_document_vector(query))
 
-        # TODO: REPLACE the following line with code that computes the
-        # cosine similarity between the query vector and all document
-        # vectors in the self.wiki_corpus_vectors matrix, and saves
-        # the similarity scores to a list or numpy array called sims,
-        # indexed in the same order as self.wiki_corpus_vectors.
-        sims = []
-
+        # Compute cosine similarity between the query vector and all documents in doc-term matrix.
+        sims = (query_vector @ self.wiki_corpus_vectors.transpose()).flatten()
+            
         return sims, np.argsort(sims)[::-1]
 
     def run_search(self, query, n_results=10):
@@ -99,12 +119,17 @@ def main():
                         help="The search query to run")
     parser.add_argument("-n", "--num_articles", type=int, metavar="N", default=None,
                         help="Only keep the first N articles parsed from the corpus files")
+    parser.add_argument("-m", "--model", type=str, choices=['tfidf', 'svd'], default=True,
+                        help="The type of model to run")
     
     args = parser.parse_args()
 
     articles = WikiArticles(args.data_dir, args.num_articles)
-    # TODO replace the following line with an initialization of the appropriate WikiDocumentVectors subclass
-    doc_vector_model = None
+
+    if args.model == 'svd':
+        doc_vector_model = SVDDocumentVectors()
+    if args.model == 'tfidf':
+        doc_vector_model = CountDocumentVectors()
 
     my_google = WikiSearchEngine(articles, doc_vector_model)
     my_google.train_vector_model()

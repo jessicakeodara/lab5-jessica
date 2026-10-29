@@ -1,6 +1,10 @@
 import numpy as np
 import argparse
 from sklearn.preprocessing import normalize
+from typing import override
+from scipy.sparse.linalg import svds
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 from WikiDataReader import *
 
@@ -9,9 +13,34 @@ from WikiDataReader import *
 # Define your new subclasses below!
 #####################################################################
 
+class SVDWordVectors(WikiWordVectors):
 
+    def __init__(self):
+        '''
+        Create an object of SVDDocumentVectors containing:
+            TfidfVectorizer and word_vectors (vh matrix, after running svds to the doc-term matrix)
+        '''
+        self.vectorizer = TfidfVectorizer(max_features=10000, max_df=0.70)
+        self.word_vectors = None
 
-
+    @override
+    def train(self, documents):
+        doc_term_matrix = self.vectorizer.fit_transform(documents)
+        u, s, vh = svds(A=doc_term_matrix, k=100)
+        self.word_vectors = vh
+        return u
+    
+    @override
+    def get_word_index(self, word):
+        pass 
+    
+    @override
+    def get_vocabulary(self):
+        pass
+    
+    @override
+    def get_word_vector(self, word):
+        pass
 
 
 #####################################################################

@@ -18,13 +18,13 @@ def get_files(dirname):
 # WikiArticles
 #####################################################################
 
-def main():
-    articles = WikiArticles('/courses/cs159/data/wikipedia/enwiki_sampled')
-    abstracts = list(articles.get_abstracts())
-    # print(abstracts)
+# def main():
+#     articles = WikiArticles('/courses/cs159/data/wikipedia/enwiki_sampled')
+#     abstracts = list(articles.get_abstracts())
+#     # print(abstracts)
 
-    names = articles.get_names()
-    # print(names)
+#     names = articles.get_names()
+#     # print(names)
     
 
 class WikiArticles():
