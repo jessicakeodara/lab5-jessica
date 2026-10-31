@@ -126,10 +126,9 @@ def main():
 
     articles = WikiArticles(args.data_dir, args.num_articles)
 
+    doc_vector_model = CountDocumentVectors()
     if args.model == 'svd':
         doc_vector_model = SVDDocumentVectors()
-    if args.model == 'tfidf':
-        doc_vector_model = CountDocumentVectors()
 
     my_google = WikiSearchEngine(articles, doc_vector_model)
     my_google.train_vector_model()
